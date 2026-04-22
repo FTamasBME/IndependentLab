@@ -7,13 +7,17 @@ Adafruit_MAX44009 max44009;
 Adafruit_TSL2591 tsl = Adafruit_TSL2591(2591);
 
 #define LIGHTSENSORPIN A0
+#define PWM_LED_1 3
+#define PWM_LED_2 5
 
 
 unsigned long previousMicrosFast = 0;
 unsigned long previousMillisTSL = 0;
+unsigned long previousMillisLED = 0;
 
-const unsigned long intervalFast = 6250; 
-const unsigned long intervalTSL = 100;   
+const unsigned long intervalFast = 6250;//6.25 ms 
+const unsigned long intervalTSL = 100;//100 ms
+const unsigned long intervalLED = 20;//20 ms   
 
 unsigned long sumTEMT = 0;
 unsigned long countTEMT = 0;
@@ -27,6 +31,8 @@ float thresholdTSL  = 0.0;
 float prevLuxMAX  = -1.0;
 float prevLuxTEMT = -1.0;
 float prevLuxTSL  = -1.0;
+
+const unsigned long pwmCycleDuration = 3500;
 
 //-----------------------------------------------------------------------------------------------------
 
@@ -82,6 +88,8 @@ void setup() {
   while (!Serial) delay(10);
 
   pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(PWM_LED_1, OUTPUT);
+  pinMode(PWM_LED_2, OUTPUT);
 
   Serial.println(F("Sensor Test Started"));
 
@@ -163,6 +171,17 @@ void SlowInterrupt(void){
   TSLRead();
 }
 
+void updatePwmLEDs(unsigned long currentMillis) {
+  float timeProgress = (currentMillis % pwmCycleDuration) / (float)pwmCycleDuration;
+  
+  float angle = timeProgress * 2.0 * PI;
+  
+  int pwmValue = (sin(angle) + 1.0) * 127.5;
+  
+  analogWrite(PWM_LED_1, pwmValue);
+  analogWrite(PWM_LED_2, pwmValue);
+}
+
 //-------------------------------------------------------------------------------------------------------------------
 void loop() {
   unsigned long currentMicros = micros();
@@ -175,6 +194,11 @@ void loop() {
     previousMicrosFast = currentMicros; 
     
     FastInterrupt();//6.25 ms
+  }
+
+  if (currentMillis - previousMillisLED >= intervalLED) {
+    previousMillisLED = currentMillis;
+    updatePwmLEDs(currentMillis);
   }
 
   if (currentMillis - previousMillisTSL >= intervalTSL) {
