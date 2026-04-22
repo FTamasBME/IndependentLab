@@ -102,6 +102,17 @@ void TEMTRead(void) {
   Serial.print(F("TEMT (6.25ms): ")); Serial.println(lux);
 }
 
+void FastInterrupt(void){
+  MAXRead();
+  TEMTRead();
+}
+
+void SlowInterrupt(void){
+  Serial.println(F("---")); 
+  //TEMTRead();
+  TSLRead();
+}
+
 //-------------------------------------------------------------------------------------------------------------------
 void loop() {
   unsigned long currentMicros = micros();
@@ -110,16 +121,13 @@ void loop() {
   if (currentMicros - previousMicrosFast >= intervalFast) {
     previousMicrosFast = currentMicros; 
     
-    MAXRead();
-    TEMTRead();
+    FastInterrupt();//6.25 ms
   }
 
   if (currentMillis - previousMillisTSL >= intervalTSL) {
     previousMillisTSL = currentMillis;
     
-    Serial.println(F("---")); 
-    //TEMTRead();
-    TSLRead();
+    SlowInterrupt();//10 ms
   }
   
 }
