@@ -15,6 +15,9 @@ unsigned long previousMillisTSL = 0;
 const unsigned long intervalFast = 6250; 
 const unsigned long intervalTSL = 100;   
 
+unsigned long sumTEMT = 0;
+unsigned long countTEMT = 0;
+
 //-----------------------------------------------------------------------------------------------------
 
 void displayTSLSensorDetails(void) {
@@ -95,11 +98,18 @@ void MAXRead(void) {
 }
 
 void TEMTRead(void) {
-  float reading = analogRead(LIGHTSENSORPIN);
-  float voltage = reading * (3.3 / 1024.0);
+  if (countTEMT == 0) return;
+
+  float averageReading = (float)sumTEMT / countTEMT;
+
+  float voltage = averageReading * (3.3 / 1024.0);
   float amps = voltage / 10000.0 * 1000000.0;  
   float lux = amps * 2.0;
-  Serial.print(F("TEMT (6.25ms): ")); Serial.println(lux);
+  
+  Serial.print(F("TEMT (6.25ms Avg: ")); Serial.println(lux);
+
+  sumTEMT = 0;
+  countTEMT = 0;
 }
 
 void FastInterrupt(void){
@@ -118,6 +128,9 @@ void loop() {
   unsigned long currentMicros = micros();
   unsigned long currentMillis = millis();
 
+  sumTEMT += analogRead(LIGHTSENSORPIN);
+  countTEMT++;
+
   if (currentMicros - previousMicrosFast >= intervalFast) {
     previousMicrosFast = currentMicros; 
     
@@ -127,7 +140,7 @@ void loop() {
   if (currentMillis - previousMillisTSL >= intervalTSL) {
     previousMillisTSL = currentMillis;
     
-    SlowInterrupt();//10 ms
+    SlowInterrupt();//100 ms
   }
   
 }
