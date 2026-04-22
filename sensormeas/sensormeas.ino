@@ -18,6 +18,16 @@ const unsigned long intervalTSL = 100;
 unsigned long sumTEMT = 0;
 unsigned long countTEMT = 0;
 
+const float THRESHOLD_PERCENT = 20.0;
+
+float thresholdMAX  = 0.0;
+float thresholdTEMT = 0.0;
+float thresholdTSL  = 0.0;
+
+float prevLuxMAX  = -1.0;
+float prevLuxTEMT = -1.0;
+float prevLuxTSL  = -1.0;
+
 //-----------------------------------------------------------------------------------------------------
 
 void displayTSLSensorDetails(void) {
@@ -67,8 +77,11 @@ void MAXSetup(void){
 }
 
 void setup() {
+
   Serial.begin(115200);
   while (!Serial) delay(10);
+
+  pinMode(LED_BUILTIN, OUTPUT);
 
   Serial.println(F("Sensor Test Started"));
 
@@ -84,17 +97,42 @@ void setup() {
 }
 
 //-------------------------------------------------------------------------------------------------------------------
+void checkChange(float currentLux, float &prevLux, float &threshold) {
+  if (prevLux < 0.0) {
+    prevLux = currentLux;
+    return;
+  }
+
+  float diff = abs(currentLux - prevLux);
+  threshold = prevLux * (THRESHOLD_PERCENT / 100.0);
+  
+  if (threshold < 5.0) {
+    threshold = 10.0; 
+  }
+
+  if (diff > threshold) {
+    digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));      
+  }
+
+  prevLux = currentLux; 
+}
+
 void TSLRead(void) {
   uint32_t lum = tsl.getFullLuminosity();
   uint16_t ir, full;
   ir = lum >> 16;
   full = lum & 0xFFFF;
-  Serial.print(F("TSL (100ms): ")); Serial.println(tsl.calculateLux(full, ir), 6);
+  float lux = tsl.calculateLux(full, ir);
+  Serial.print(F("TSL (100ms): ")); Serial.println(lux, 6);
+  
+  //checkChange(lux, prevLuxTSL, thresholdTSL);
 }
 
 void MAXRead(void) {
   float lux = max44009.readLux();
   Serial.print(F("MAX (6.25ms): "));Serial.println(lux);
+
+  //checkChange(lux, prevLuxMAX, thresholdMAX);
 }
 
 void TEMTRead(void) {
@@ -107,6 +145,8 @@ void TEMTRead(void) {
   float lux = amps * 2.0;
   
   Serial.print(F("TEMT (6.25ms Avg: ")); Serial.println(lux);
+
+  checkChange(lux, prevLuxTEMT, thresholdTEMT);
 
   sumTEMT = 0;
   countTEMT = 0;
