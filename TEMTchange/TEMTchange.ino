@@ -82,10 +82,20 @@ void processWithFilter() {
   }
 
   // Ugrás vizsgálata a SZŰRT értéken
-  if (abs(filteredContribution - lastPrintedContribution) >= JUMP_THRESHOLD) {
+  //if (abs(filteredContribution - lastPrintedContribution) >= JUMP_THRESHOLD) {
     
-    Serial.print("ESEMÉNY!");
+    Serial.print("ESEMÉNY! -> MAX: ");
+    Serial.print(maxLedContribution, 1);
+    
+    Serial.print(" | Szűrt hatás: ");
+    Serial.print(filteredContribution, 1);
+    
+    Serial.print(" | Nyers: ");
+    Serial.print(rawContribution, 1);
+    
+    Serial.print(" | Ambient: ");
+    Serial.println(ambientTEMT, 1);
 
     lastPrintedContribution = filteredContribution;
-  }
+  //}
 }
