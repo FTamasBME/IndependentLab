@@ -32,7 +32,7 @@ float prevLuxMAX  = -1.0;
 float prevLuxTEMT = -1.0;
 float prevLuxTSL  = -1.0;
 
-const unsigned long pwmCycleDuration = 3500;
+const unsigned long pwmCycleDuration = 20;
 
 //-----------------------------------------------------------------------------------------------------
 
@@ -171,7 +171,7 @@ void SlowInterrupt(void){
   TSLRead();
 }
 
-void updatePwmLEDs(unsigned long currentMillis) {
+/*void updatePwmLEDs(unsigned long currentMillis) {
   float timeProgress = (currentMillis % pwmCycleDuration) / (float)pwmCycleDuration;
   
   float angle = timeProgress * 2.0 * PI;
@@ -180,6 +180,15 @@ void updatePwmLEDs(unsigned long currentMillis) {
   
   analogWrite(PWM_LED_1, pwmValue);
   analogWrite(PWM_LED_2, pwmValue);
+}*/
+
+void updatePwmLEDs(unsigned long currentMillis) {
+  
+  static int baseBrightness = 200; 
+  int flicker = random(-2, 3);   
+  
+  analogWrite(PWM_LED_1, constrain(baseBrightness + flicker, 0, 255));
+  analogWrite(PWM_LED_2, constrain(baseBrightness + flicker, 0, 255));
 }
 
 //-------------------------------------------------------------------------------------------------------------------
