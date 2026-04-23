@@ -63,12 +63,12 @@ void loop() {
       digitalWrite(PWM_LED_2, HIGH);
       ledsOn = true;
 
-      processWithFilter();
+      processWithFilter(currentMicros);
     }
   }
 }
 
-void processWithFilter() {
+void processWithFilter(unsigned long currentMicros) {
   float rawContribution = totalTEMT - ambientTEMT;
   if (rawContribution < 0) rawContribution = 0;
 
@@ -80,22 +80,31 @@ void processWithFilter() {
   if (filteredContribution > maxLedContribution) {
     maxLedContribution = filteredContribution;
   }
-
+  Serial.print(currentMicros);
+  Serial.print("|");
+  Serial.print(filterWeight);
+  Serial.print("|");
+  Serial.print(JUMP_THRESHOLD);
+  Serial.print("|");
   // Ugrás vizsgálata a SZŰRT értéken
-  //if (abs(filteredContribution - lastPrintedContribution) >= JUMP_THRESHOLD) {
-    
-    Serial.print("ESEMÉNY! -> MAX: ");
-    Serial.print(maxLedContribution, 1);
-    
-    Serial.print(" | Szűrt hatás: ");
-    Serial.print(filteredContribution, 1);
-    
-    Serial.print(" | Nyers: ");
-    Serial.print(rawContribution, 1);
-    
-    Serial.print(" | Ambient: ");
-    Serial.println(ambientTEMT, 1);
-
+  if (abs(filteredContribution - lastPrintedContribution) >= JUMP_THRESHOLD) {
+    Serial.print(1);
     lastPrintedContribution = filteredContribution;
-  //}
+    }else{
+      Serial.print(0);
+    }
+    //Serial.print(maxLedContribution, 1);
+    
+    //Serial.print(" | Szűrt hatás: ");
+  Serial.print("|");
+  Serial.print(filteredContribution, 1);
+    
+    //Serial.print(" | Nyers: ");
+    Serial.print("|");
+  Serial.print(rawContribution, 1);
+    
+    //Serial.print(" | Ambient: ");
+    Serial.print("|");
+  Serial.println(ambientTEMT, 1);
+  
 }
